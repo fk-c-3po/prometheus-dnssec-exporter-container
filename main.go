@@ -16,10 +16,17 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 var addr = flag.String("listen-address", ":9204", "Prometheus metrics port")
 var conf = flag.String("config", "/etc/dnssec-checks", "Configuration file")
 var resolvers = flag.String("resolvers", "8.8.8.8:53,1.1.1.1:53", "Resolvers to use (comma separated)")
 var timeout = flag.Duration("timeout", 10*time.Second, "Timeout for network operations")
+var showVersion = flag.Bool("version", false, "Show version and exit")
 
 type Records struct {
 	Zone   string
@@ -202,6 +209,11 @@ func hostname(zone, record string) string {
 func main() {
 
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("prometheus-dnssec-exporter %s (commit: %s, built: %s)\n", version, commit, date)
+		os.Exit(0)
+	}
 
 	f, err := os.Open(*conf)
 	if err != nil {

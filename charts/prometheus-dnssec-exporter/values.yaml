@@ -1,0 +1,116 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/fk-c-3po/prometheus-dnssec-exporter-container
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# DNS resolvers to use (comma-separated)
+resolvers: "8.8.8.8:53,1.1.1.1:53"
+
+# Timeout for DNS operations
+timeout: "10s"
+
+# DNSSEC records to monitor
+# Each record requires zone, record, and type
+records:
+  - zone: "example.org"
+    record: "@"
+    type: "SOA"
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  port: 9204
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 64Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Standard prometheus.io annotations for auto-discovery
+# Works with Alloy's prometheus.scrape + discovery.kubernetes
+metrics:
+  annotations:
+    enabled: false
+
+# Prometheus ServiceMonitor configuration
+serviceMonitor:
+  enabled: false
+  interval: 60s
+  scrapeTimeout: 30s
+  labels: {}
+  annotations: {}
+
+# Prometheus PodMonitor configuration (alternative to ServiceMonitor)
+podMonitor:
+  enabled: false
+  interval: 60s
+  scrapeTimeout: 30s
+  labels: {}
+  annotations: {}
+
+
+# Prometheus PrometheusRule for alerts
+prometheusRule:
+  enabled: false
+  labels: {}
+  rules:
+    - alert: DNSSECSignatureExpiringSoon
+      expr: dnssec_zone_record_days_left < 7
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "DNSSEC signature expiring soon"
+        description: "Zone {{ $labels.zone }} record {{ $labels.record }} signature expires in {{ $value }} days"
+    - alert: DNSSECSignatureExpired
+      expr: dnssec_zone_record_days_left < 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "DNSSEC signature expired"
+        description: "Zone {{ $labels.zone }} record {{ $labels.record }} signature has expired"
+    - alert: DNSSECValidationFailed
+      expr: dnssec_zone_record_resolves == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "DNSSEC validation failed"
+        description: "Zone {{ $labels.zone }} record {{ $labels.record }} failed DNSSEC validation on {{ $labels.resolver }}"

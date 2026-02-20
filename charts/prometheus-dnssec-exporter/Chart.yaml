@@ -1,0 +1,17 @@
+apiVersion: v2
+name: prometheus-dnssec-exporter
+description: Prometheus exporter for DNSSEC signature validity and expiration
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - prometheus
+  - dnssec
+  - exporter
+  - monitoring
+  - dns
+home: https://github.com/fk-c-3po/prometheus-dnssec-exporter-container
+sources:
+  - https://github.com/fk-c-3po/prometheus-dnssec-exporter-container
+maintainers:
+  - name: fk-c-3po

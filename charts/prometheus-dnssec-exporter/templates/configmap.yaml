@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "prometheus-dnssec-exporter.fullname" . }}
+  labels:
+    {{- include "prometheus-dnssec-exporter.labels" . | nindent 4 }}
+data:
+  config: |
+    {{- range .Values.records }}
+    [[records]]
+      zone = {{ .zone | quote }}
+      record = {{ .record | quote }}
+      type = {{ .type | quote }}
+    {{ end }}

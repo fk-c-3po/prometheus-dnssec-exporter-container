@@ -1,0 +1,28 @@
+prometheus-dnssec-exporter has been deployed!
+
+To verify the deployment:
+
+  kubectl get pods -l "app.kubernetes.io/name={{ include "prometheus-dnssec-exporter.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+
+To access the metrics endpoint:
+
+  kubectl port-forward svc/{{ include "prometheus-dnssec-exporter.fullname" . }} 9204:{{ .Values.service.port }}
+  curl http://localhost:9204/metrics
+
+{{- if .Values.serviceMonitor.enabled }}
+
+ServiceMonitor is enabled - Prometheus Operator will automatically discover and scrape metrics.
+{{- else }}
+
+To enable automatic Prometheus scraping, set serviceMonitor.enabled=true in your values.
+{{- end }}
+
+{{- if .Values.prometheusRule.enabled }}
+
+PrometheusRule is enabled with default DNSSEC alerts.
+{{- end }}
+
+Configured DNSSEC records:
+{{- range .Values.records }}
+  - {{ .zone }} {{ .record }} {{ .type }}
+{{- end }}
