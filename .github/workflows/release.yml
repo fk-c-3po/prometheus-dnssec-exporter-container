@@ -96,3 +96,32 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  helm:
+    name: Package and Push Helm Chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Package Helm chart
+        run: |
+          helm package charts/prometheus-dnssec-exporter --version ${GITHUB_REF_NAME#v} --app-version ${GITHUB_REF_NAME#v}
+
+      - name: Push Helm chart to GHCR
+        run: |
+          helm push prometheus-dnssec-exporter-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
