@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"testing"
@@ -20,7 +20,7 @@ type opts struct {
 }
 
 func nullLogger() *log.Logger {
-	return log.New(ioutil.Discard, "", log.LstdFlags)
+	return log.New(io.Discard, "", log.LstdFlags)
 }
 
 func runServer(t *testing.T, opts opts) ([]string, func()) {
@@ -104,7 +104,7 @@ func runServer(t *testing.T, opts opts) ([]string, func()) {
 		msg.AuthenticatedData = !opts.unauthenticated && !opts.noedns0support
 		msg.Rcode = opts.rcode
 
-		rw.WriteMsg(msg)
+		_ = rw.WriteMsg(msg)
 
 	})
 
@@ -119,15 +119,15 @@ func runServer(t *testing.T, opts opts) ([]string, func()) {
 	}
 
 	go func() {
-		server.ActivateAndServe()
+		_ = server.ActivateAndServe()
 	}()
 
 	done := make(chan bool)
 
 	go func() {
 		<-done
-		server.Shutdown()
-		ln.Close()
+		_ = server.Shutdown()
+		_ = ln.Close()
 	}()
 
 	return []string{ln.Addr().String()}, func() {
